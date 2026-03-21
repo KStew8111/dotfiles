@@ -6,7 +6,7 @@ return {
       -- only the most useful options shown; see full config below
       interactive = false,
       toplevel = true,
-      remove_existing_container = true,
+      remove_existing_container = false,
       dotfiles_repository = "https://github.com/KStew8111/dotfiles.git",
       dotfiles_branch = "main",
       dotfiles_targetPath = "~/dotfiles",
@@ -14,7 +14,7 @@ return {
       shell = "bash",
       nvim_binary = "nvim",
       log_level = "debug",
-      console_level = "info",
+      console_level = "debug",
     }
   end,
 }
