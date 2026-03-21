@@ -8,7 +8,7 @@ return {
       toplevel = true,
       remove_existing_container = false,
       dotfiles_repository = "https://github.com/KStew8111/dotfiles.git",
-      dotfiles_branch = "main",
+      dotfiles_branch = "devcontainer-config",
       dotfiles_targetPath = "~/dotfiles",
       dotfiles_installCommand = "ls; cd ~/dotfiles; stow nvim",
       shell = "bash",
