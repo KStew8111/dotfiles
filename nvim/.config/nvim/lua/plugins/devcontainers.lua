@@ -11,7 +11,7 @@ return {
       dotfiles_branch = "devcontainer-config",
       dotfiles_targetPath = "~/dotfiles",
       dotfiles_installCommand = "stow nvim",
-      shell = "ghostty",
+      shell = "bash",
       nvim_binary = "nvim",
       log_level = "debug",
       console_level = "info",
