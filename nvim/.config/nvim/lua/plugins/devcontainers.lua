@@ -10,7 +10,7 @@ return {
       dotfiles_repository = "https://github.com/KStew8111/dotfiles.git",
       dotfiles_branch = "devcontainer-config",
       dotfiles_targetPath = "~/dotfiles",
-      dotfiles_installCommand = "cd ~/dotfiles; stow nvim",
+      dotfiles_installCommand = "install.sh",
       shell = "bash",
       nvim_binary = "nvim",
       log_level = "debug",
