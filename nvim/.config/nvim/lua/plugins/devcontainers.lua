@@ -6,7 +6,7 @@ return {
     toplevel = true,
     remove_existing_container = true,
     dotfiles_repository = "https://github.com/KStew8111/dotfiles.git",
-    dotfiles_branch = "devcontainer-config",
+    dotfiles_branch = "main",
     dotfiles_targetPath = "~/dotfiles",
     dotfiles_installCommand = "install.sh",
     shell = "bash",
