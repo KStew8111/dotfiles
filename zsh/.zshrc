@@ -120,3 +120,6 @@ fpath+=${ZDOTDIR:-~}/.zsh_functions
 # ROS 
 source /opt/ros/jazzy/setup.zsh
 export ISAAC_ROS_WS="${ISAAC_ROS_WS:-${HOME}/workspaces/isaac_ros-dev/}"
+
+# Mise 
+eval "$(mise activate zsh)"
