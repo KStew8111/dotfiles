@@ -125,3 +125,7 @@ export ISAAC_ROS_WS="${ISAAC_ROS_WS:-${HOME}/workspaces/isaac_ros-dev/}"
 eval "$(mise activate zsh)"
 
 export PATH="$HOME/.npm-global/bin:$PATH"
+
+# ROS 2 autocomplete
+eval "$(register-python-argcomplete ros2)"
+eval "$(register-python-argcomplete colcon)"
