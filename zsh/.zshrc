@@ -123,3 +123,5 @@ export ISAAC_ROS_WS="${ISAAC_ROS_WS:-${HOME}/workspaces/isaac_ros-dev/}"
 
 # Mise 
 eval "$(mise activate zsh)"
+
+export PATH="$HOME/.npm-global/bin:$PATH"
