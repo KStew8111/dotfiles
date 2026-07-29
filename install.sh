@@ -22,3 +22,18 @@ else
   echo "Detected Ubuntu $UBUNTU_VER (or non-Ubuntu) — using AstroNvim v6 (nvim)"
   stow -t "$HOME" nvim
 fi
+
+# Install opencode if not installed
+if ! command -v opencode >/dev/null 2>&1; then
+  echo "opencode not found — installing..."
+  curl -fsSL https://opencode.ai/install | bash
+fi
+
+# Install opencode config
+stow -t "$HOME" opencode
+
+# Configure providers
+read -rp "Would you like to run 'opencode providers login' to add a provider? [y/N] " response
+if [[ "$response" =~ ^[Yy]$ ]]; then
+  opencode providers login
+fi
