@@ -32,6 +32,38 @@ fi
 # Install opencode config
 stow -t "$HOME" opencode
 
+# Install and stow zsh
+if ! command -v zsh >/dev/null 2>&1; then
+  echo "Installing zsh..."
+  sudo apt-get update && sudo apt-get install -y zsh
+fi
+
+# Install oh-my-zsh if not installed
+if ! grep -q "oh-my-zsh" "$HOME/.zshrc" 2>/dev/null; then
+  echo "Installing oh-my-zsh..."
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+fi
+
+stow -t "$HOME" zsh
+chsh -s "$(which zsh)"
+
+# Install and stow ghostty
+if ! command -v ghostty >/dev/null 2>&1; then
+  echo "Installing ghostty..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/mkasberg/ghostty-ubuntu/HEAD/install.sh)"
+fi
+stow -t "$HOME" ghostty
+
+# Install and stow zellij (0.43.1)
+if ! command -v zellij >/dev/null 2>&1; then
+  echo "Installing zellij 0.43.1..."
+  ZELLIJ_VER="0.43.1"
+  curl -fsSL "https://github.com/zellij-org/zellij/releases/download/${ZELLIJ_VER}/zellij-${ZELLIJ_VER}-x86_64-linux.tar.gz" -o /tmp/zellij.tar.gz
+  sudo tar -xzf /tmp/zellij.tar.gz -C /usr/local/bin zellij
+  rm /tmp/zellij.tar.gz
+fi
+stow -t "$HOME" zellij
+
 # Configure providers
 read -rp "Would you like to run 'opencode providers login' to add a provider? [y/N] " response
 if [[ "$response" =~ ^[Yy]$ ]]; then
