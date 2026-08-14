@@ -85,7 +85,7 @@ fi
 
 # Stow zsh config BEFORE oh-my-zsh so .zshrc is managed by dotfiles
 stow -t "$HOME" zsh
-chsh -s "$(which zsh)"
+sudo chsh -s "$(which zsh)"
 
 # Install oh-my-zsh if not installed, preserving the dotfiles-managed .zshrc
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
