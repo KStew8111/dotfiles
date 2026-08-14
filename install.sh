@@ -31,7 +31,11 @@ else
   NVIM_VER="0.12.4"
   echo "Detected Ubuntu $UBUNTU_VER (or non-Ubuntu) — using AstroNvim v6 (nvim)"
 fi
-NVIM_TARBALL="nvim-linux-x86_64"
+# Map architecture to Neovim release tarball naming
+case "$TARGET_ARCH" in
+  aarch64) NVIM_TARBALL="nvim-linux-arm64" ;;
+  x86_64)  NVIM_TARBALL="nvim-linux-x86_64" ;;
+esac
 
 # Install Neovim pinned to the Ubuntu-compatible version
 install_neovim() {
