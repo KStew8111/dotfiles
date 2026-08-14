@@ -56,16 +56,18 @@ return {
         end
       end
 
-      local exec_cmd = devcontainer_bin .. " exec --workspace-folder '" .. workspace .. "' nvim"
+      local nvim_binary = opts.nvim_binary or "nvim"
+      local exec_cmd = devcontainer_bin .. " exec --workspace-folder '" .. workspace .. "' " .. nvim_binary
+
+      -- Shell command that keeps the terminal open if either up or exec fails,
+      -- so the error is visible instead of the window closing instantly.
+      local shell_cmd = "(" .. up_cmd .. " && " .. exec_cmd .. ") || (ec=$?; echo 'DevcontainerConnect failed with exit code '$ec; read -rsp 'Press Enter to close...' _; exit $ec)"
 
       local cmd = {}
+      local term_name = "gnome-terminal"
 
-      -- 3. Build the command array
-      -- We pass each argument as a separate element to avoid quoting issues
       if vim.env.ZELLIJ ~= nil then
-        -- 'zellij run' opens a new floating pane or tiled pane by default.
-        -- To force a new TAB, we use 'zellij action new-tab'
-        -- But 'run' is usually better for one-off tasks.
+        term_name = "zellij"
         cmd = {
           "zellij",
           "run",
@@ -74,33 +76,41 @@ return {
           "--",
           "bash",
           "-c",
-          up_cmd .. " && " .. exec_cmd,
+          shell_cmd,
         }
       elseif vim.fn.executable "ghostty" == 1 then
+        term_name = "ghostty"
         cmd = {
           "ghostty",
           "-e",
           bash_bin,
           "-c",
-          up_cmd .. " && " .. exec_cmd,
+          shell_cmd,
         }
       elseif vim.fn.executable "alacritty" == 1 then
+        term_name = "alacritty"
         cmd = {
           "alacritty",
           "-e",
           bash_bin,
           "-c",
-          up_cmd .. " && " .. exec_cmd,
+          shell_cmd,
         }
-      else
+      elseif vim.fn.executable "gnome-terminal" == 1 then
+        term_name = "gnome-terminal"
         cmd = {
           "gnome-terminal",
           "--",
           bash_bin,
           "-c",
-          up_cmd .. " && " .. exec_cmd,
+          shell_cmd,
         }
+      else
+        vim.notify("No supported terminal emulator found (ghostty, alacritty, gnome-terminal).", vim.log.levels.ERROR)
+        return
       end
+
+      vim.notify("DevcontainerConnect using " .. term_name .. ": " .. shell_cmd, vim.log.levels.INFO)
 
       -- 3. Launch the process
       vim.fn.jobstart(cmd, {
