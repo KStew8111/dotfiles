@@ -176,49 +176,6 @@ if $INSTALL_NVIM; then
   fi
 fi
 
-# Stow the matching AstroNvim configuration
-if [ "$UBUNTU_VER" -le 22 ] && [ "$UBUNTU_VER" -gt 0 ]; then
-  stow -t "$HOME" nvim-legacy
-else
-  stow -t "$HOME" nvim
-fi
-
-# Install opencode if not installed
-if ! command -v opencode >/dev/null 2>&1; then
-  echo "opencode not found — installing..."
-  curl -fsSL https://opencode.ai/install | bash
-fi
-
-# Install opencode config
-stow -t "$HOME" opencode
-
-# Install zsh
-if ! command -v zsh >/dev/null 2>&1; then
-  echo "Installing zsh..."
-  sudo apt-get update && sudo apt-get install -y zsh
-fi
-
-# Stow zsh config BEFORE oh-my-zsh so .zshrc is managed by dotfiles
-stow -t "$HOME" zsh
-sudo chsh -s "$(which zsh)"
-
-# Install oh-my-zsh if not installed, preserving the dotfiles-managed .zshrc
-if [ ! -d "$HOME/.oh-my-zsh" ]; then
-  echo "Installing oh-my-zsh..."
-  sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended --keep-zshrc
-else
-  echo "oh-my-zsh already installed — skipping"
-fi
-
-# Install and stow ghostty (x86_64 only — not available/packaged for aarch64 on Ubuntu)
-if [ "$TARGET_ARCH" = "x86_64" ]; then
-  if ! command -v ghostty >/dev/null 2>&1; then
-    echo "Installing ghostty..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/mkasberg/ghostty-ubuntu/HEAD/install.sh)"
-  fi
-  stow -t "$HOME" opencode
-fi
-
 # ---------------------------------------------------------------------------
 # zsh / oh-my-zsh
 # ---------------------------------------------------------------------------
