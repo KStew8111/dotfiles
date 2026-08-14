@@ -191,11 +191,12 @@ if $INSTALL_ZSH; then
   if $SET_SHELL; then
     echo "Changing default shell to zsh..."
     ZSH_PATH=$(which zsh)
-    # Prefer sudo when available without a password (common in devcontainers),
-    # because plain `chsh` prompts for the current user's password and can hang
-    # in non-interactive environments.
-    if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
-      sudo chsh -s "$ZSH_PATH" "$USER"
+    CURRENT_USER=$(id -un 2>/dev/null || whoami 2>/dev/null || echo "$USER")
+
+    if [ -z "$CURRENT_USER" ]; then
+      echo "Warning: could not determine current user; skipping chsh." >&2
+    elif command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+      sudo chsh -s "$ZSH_PATH" "$CURRENT_USER"
     else
       chsh -s "$ZSH_PATH"
     fi
