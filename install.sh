@@ -4,6 +4,15 @@ set -e
 
 cd "$HOME/dotfiles"
 
+# Detect architecture
+ARCH=$(uname -m)
+case "$ARCH" in
+  x86_64)  TARGET_ARCH="x86_64" ;;
+  aarch64) TARGET_ARCH="aarch64" ;;
+  arm64)   TARGET_ARCH="aarch64" ;;
+  *)       echo "Unsupported architecture: $ARCH"; exit 1 ;;
+esac
+
 # Detect Ubuntu major version (falls back to 0 on non-Ubuntu systems)
 UBUNTU_VER=0
 if [ -f /etc/os-release ]; then
@@ -64,33 +73,40 @@ fi
 # Install opencode config
 stow -t "$HOME" opencode
 
-# Install and stow zsh
+# Install zsh
 if ! command -v zsh >/dev/null 2>&1; then
   echo "Installing zsh..."
   sudo apt-get update && sudo apt-get install -y zsh
 fi
 
-# Install oh-my-zsh if not installed
-if ! grep -q "oh-my-zsh" "$HOME/.zshrc" 2>/dev/null; then
-  echo "Installing oh-my-zsh..."
-  sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-fi
-
+# Stow zsh config BEFORE oh-my-zsh so .zshrc is managed by dotfiles
 stow -t "$HOME" zsh
 chsh -s "$(which zsh)"
 
-# Install and stow ghostty
-if ! command -v ghostty >/dev/null 2>&1; then
-  echo "Installing ghostty..."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/mkasberg/ghostty-ubuntu/HEAD/install.sh)"
+# Install oh-my-zsh if not installed, preserving the dotfiles-managed .zshrc
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+  echo "Installing oh-my-zsh..."
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended --keep-zshrc
+else
+  echo "oh-my-zsh already installed — skipping"
 fi
-stow -t "$HOME" ghostty
+
+# Install and stow ghostty (x86_64 only — not available/packaged for aarch64 on Ubuntu)
+if [ "$TARGET_ARCH" = "x86_64" ]; then
+  if ! command -v ghostty >/dev/null 2>&1; then
+    echo "Installing ghostty..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/mkasberg/ghostty-ubuntu/HEAD/install.sh)"
+  fi
+  stow -t "$HOME" ghostty
+else
+  echo "Skipping ghostty install — not supported on $TARGET_ARCH"
+fi
 
 # Install and stow zellij (0.43.1)
 if ! command -v zellij >/dev/null 2>&1; then
   echo "Installing zellij 0.43.1..."
   ZELLIJ_VER="0.43.1"
-  curl -fsSL "https://github.com/zellij-org/zellij/releases/download/${ZELLIJ_VER}/zellij-${ZELLIJ_VER}-x86_64-linux.tar.gz" -o /tmp/zellij.tar.gz
+  curl -fsSL "https://github.com/zellij-org/zellij/releases/download/v${ZELLIJ_VER}/zellij-${TARGET_ARCH}-unknown-linux-musl.tar.gz" -o /tmp/zellij.tar.gz
   sudo tar -xzf /tmp/zellij.tar.gz -C /usr/local/bin zellij
   rm /tmp/zellij.tar.gz
 fi
