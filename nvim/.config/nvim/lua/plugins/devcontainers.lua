@@ -8,7 +8,7 @@ return {
     dotfiles_repository = "https://github.com/KStew8111/dotfiles.git",
     dotfiles_branch = "main",
     dotfiles_targetPath = "~/dotfiles",
-    dotfiles_installCommand = "install.sh",
+    dotfiles_installCommand = "install.sh --nvim --zsh --chsh",
     shell = "bash",
     nvim_binary = "nvim",
     log_level = "debug",
