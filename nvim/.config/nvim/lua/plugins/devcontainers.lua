@@ -35,9 +35,32 @@ return {
         return
       end
 
+      -- 2. Build the devcontainer up command, including dotfiles settings
+      --    so it matches what :DevcontainerUp would do.
+      local up_cmd = devcontainer_bin .. " up --workspace-folder '" .. workspace .. "'"
+      up_cmd = up_cmd .. " --remove-existing-container"
+      up_cmd = up_cmd .. " --update-remote-user-uid-default off"
+
+      if opts.dotfiles_repository and opts.dotfiles_repository ~= "" then
+        up_cmd = up_cmd .. " --dotfiles-repository '" .. opts.dotfiles_repository .. "'"
+        if opts.dotfiles_branch and opts.dotfiles_branch ~= "" then
+          up_cmd = up_cmd .. " -b " .. opts.dotfiles_branch
+        end
+        if opts.dotfiles_targetPath and opts.dotfiles_targetPath ~= "" then
+          up_cmd = up_cmd .. " --dotfiles-target-path '" .. opts.dotfiles_targetPath .. "'"
+        end
+        -- The plugin internally reads `dotfiles_install_command` (snake_case).
+        local install_cmd = opts.dotfiles_install_command or opts.dotfiles_installCommand
+        if install_cmd and install_cmd ~= "" then
+          up_cmd = up_cmd .. " --dotfiles-install-command '" .. install_cmd .. "'"
+        end
+      end
+
+      local exec_cmd = devcontainer_bin .. " exec --workspace-folder '" .. workspace .. "' nvim"
+
       local cmd = {}
 
-      -- 2. Build the command array
+      -- 3. Build the command array
       -- We pass each argument as a separate element to avoid quoting issues
       if vim.env.ZELLIJ ~= nil then
         -- 'zellij run' opens a new floating pane or tiled pane by default.
@@ -51,14 +74,7 @@ return {
           "--",
           "bash",
           "-c",
-          string.format(
-            "%s up --workspace-folder %s && %s exec --workspace-folder %s %s .",
-            devcontainer_bin,
-            workspace,
-            devcontainer_bin,
-            workspace,
-            "nvim"
-          ),
+          up_cmd .. " && " .. exec_cmd,
         }
       elseif vim.fn.executable "ghostty" == 1 then
         cmd = {
@@ -66,7 +82,7 @@ return {
           "-e",
           bash_bin,
           "-c",
-          devcontainer_bin .. " exec --workspace-folder " .. workspace .. " nvim",
+          up_cmd .. " && " .. exec_cmd,
         }
       elseif vim.fn.executable "alacritty" == 1 then
         cmd = {
@@ -74,7 +90,7 @@ return {
           "-e",
           bash_bin,
           "-c",
-          devcontainer_bin .. " exec --workspace-folder " .. workspace .. " bash",
+          up_cmd .. " && " .. exec_cmd,
         }
       else
         cmd = {
@@ -82,7 +98,7 @@ return {
           "--",
           bash_bin,
           "-c",
-          devcontainer_bin .. " exec --workspace-folder " .. workspace .. " bash",
+          up_cmd .. " && " .. exec_cmd,
         }
       end
 
