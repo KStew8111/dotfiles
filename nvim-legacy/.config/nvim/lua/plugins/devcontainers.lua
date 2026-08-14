@@ -43,9 +43,6 @@ return {
 
       if opts.dotfiles_repository and opts.dotfiles_repository ~= "" then
         up_cmd = up_cmd .. " --dotfiles-repository '" .. opts.dotfiles_repository .. "'"
-        if opts.dotfiles_branch and opts.dotfiles_branch ~= "" then
-          up_cmd = up_cmd .. " -b " .. opts.dotfiles_branch
-        end
         if opts.dotfiles_targetPath and opts.dotfiles_targetPath ~= "" then
           up_cmd = up_cmd .. " --dotfiles-target-path '" .. opts.dotfiles_targetPath .. "'"
         end
