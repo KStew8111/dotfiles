@@ -13,13 +13,45 @@ if [ -f /etc/os-release ]; then
   fi
 fi
 
-# Ubuntu 22 and older → AstroNvim v5 (nvim-legacy)
-# Ubuntu 24 and newer → AstroNvim v6 (nvim)
+# Ubuntu 22 and older → AstroNvim v5 + Neovim 0.10.4
+# Ubuntu 24 and newer → AstroNvim v6 + Neovim 0.12.4
 if [ "$UBUNTU_VER" -le 22 ] && [ "$UBUNTU_VER" -gt 0 ]; then
+  NVIM_VER="0.10.4"
   echo "Detected Ubuntu $UBUNTU_VER — using AstroNvim v5 (nvim-legacy)"
+else
+  NVIM_VER="0.12.4"
+  echo "Detected Ubuntu $UBUNTU_VER (or non-Ubuntu) — using AstroNvim v6 (nvim)"
+fi
+NVIM_TARBALL="nvim-linux-x86_64"
+
+# Install Neovim pinned to the Ubuntu-compatible version
+install_neovim() {
+  echo "Installing Neovim ${NVIM_VER}..."
+  curl -fsSL "https://github.com/neovim/neovim/releases/download/v${NVIM_VER}/${NVIM_TARBALL}.tar.gz" -o /tmp/nvim.tar.gz
+  sudo mkdir -p /opt
+  sudo rm -rf "/opt/nvim-${NVIM_VER}" "/opt/${NVIM_TARBALL}"
+  sudo tar -xzf /tmp/nvim.tar.gz -C /opt
+  sudo mv "/opt/${NVIM_TARBALL}" "/opt/nvim-${NVIM_VER}"
+  sudo ln -sfn "/opt/nvim-${NVIM_VER}/bin/nvim" /usr/local/bin/nvim
+  rm -f /tmp/nvim.tar.gz
+}
+
+if ! command -v nvim >/dev/null 2>&1; then
+  install_neovim
+else
+  INSTALLED_VER=$(nvim --version | head -n1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n1)
+  if [ "$INSTALLED_VER" != "$NVIM_VER" ]; then
+    echo "Detected nvim ${INSTALLED_VER}, replacing with ${NVIM_VER}..."
+    install_neovim
+  else
+    echo "Neovim ${NVIM_VER} already installed"
+  fi
+fi
+
+# Stow the matching AstroNvim configuration
+if [ "$UBUNTU_VER" -le 22 ] && [ "$UBUNTU_VER" -gt 0 ]; then
   stow -t "$HOME" nvim-legacy
 else
-  echo "Detected Ubuntu $UBUNTU_VER (or non-Ubuntu) — using AstroNvim v6 (nvim)"
   stow -t "$HOME" nvim
 fi
 
