@@ -8,7 +8,11 @@ return {
     dotfiles_repository = "https://github.com/KStew8111/dotfiles.git",
     dotfiles_branch = "main", -- branch used when installing dotfiles inside a devcontainer
     dotfiles_targetPath = "~/dotfiles",
-    dotfiles_installCommand = "install.sh --nvim --zsh --chsh",
+    -- NOTE: devcontainer-cli.nvim reads `dotfiles_install_command`, but its
+    -- default config key is `dotfiles_installCommand`. Set both so the custom
+    -- wrapper is used regardless of that inconsistency.
+    dotfiles_installCommand = "install-devcontainer.sh",
+    dotfiles_install_command = "install-devcontainer.sh",
     shell = "bash",
     nvim_binary = "nvim",
     log_level = "debug",
