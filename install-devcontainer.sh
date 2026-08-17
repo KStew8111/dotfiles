@@ -4,4 +4,4 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-exec ./install.sh --nvim --zsh --chsh
+exec ./install.sh --nvim --zsh --chsh --lazygit

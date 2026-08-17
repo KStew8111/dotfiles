@@ -11,6 +11,7 @@ INSTALL_OPENCODE=false
 INSTALL_ZSH=false
 INSTALL_GHOSTTY=false
 INSTALL_ZELLIJ=false
+INSTALL_LAZYGIT=false
 SET_SHELL=false
 LOGIN_PROVIDERS=false
 
@@ -28,6 +29,7 @@ Options:
   -z, --zsh          Install zsh, oh-my-zsh, and stow the zsh configuration
   -g, --ghostty      Install ghostty and stow its configuration (x86_64 only)
   -j, --zellij       Install zellij and stow its configuration
+  -l, --lazygit      Install lazygit
       --chsh         Change the default login shell to zsh
   -p, --providers    Run 'opencode providers login' (interactive)
   -h, --help         Show this help message
@@ -65,6 +67,10 @@ while [[ $# -gt 0 ]]; do
       INSTALL_ZELLIJ=true
       shift
       ;;
+    -l|--lazygit)
+      INSTALL_LAZYGIT=true
+      shift
+      ;;
     --chsh)
       SET_SHELL=true
       shift
@@ -86,7 +92,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Default to --all when no component flags are provided.
-if ! $ALL && ! $INSTALL_NVIM && ! $INSTALL_OPENCODE && ! $INSTALL_ZSH && ! $INSTALL_GHOSTTY && ! $INSTALL_ZELLIJ; then
+if ! $ALL && ! $INSTALL_NVIM && ! $INSTALL_OPENCODE && ! $INSTALL_ZSH && ! $INSTALL_GHOSTTY && ! $INSTALL_ZELLIJ && ! $INSTALL_LAZYGIT; then
   ALL=true
 fi
 
@@ -96,6 +102,7 @@ if $ALL; then
   INSTALL_ZSH=true
   INSTALL_GHOSTTY=true
   INSTALL_ZELLIJ=true
+  INSTALL_LAZYGIT=true
 fi
 
 cd "$HOME/dotfiles"
@@ -238,6 +245,25 @@ if $INSTALL_ZELLIJ; then
     rm /tmp/zellij.tar.gz
   fi
   stow -t "$HOME" zellij
+fi
+
+# ---------------------------------------------------------------------------
+# lazygit
+# ---------------------------------------------------------------------------
+if $INSTALL_LAZYGIT; then
+  if ! command -v lazygit >/dev/null 2>&1; then
+    LAZYGIT_VER="0.64.1"
+    case "$TARGET_ARCH" in
+      aarch64) LAZYGIT_ARCH="arm64" ;;
+      x86_64)  LAZYGIT_ARCH="x86_64" ;;
+    esac
+    echo "Installing lazygit ${LAZYGIT_VER}..."
+    curl -fsSL "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VER}/lazygit_${LAZYGIT_VER}_Linux_${LAZYGIT_ARCH}.tar.gz" -o /tmp/lazygit.tar.gz
+    sudo tar -xzf /tmp/lazygit.tar.gz -C /usr/local/bin lazygit
+    rm -f /tmp/lazygit.tar.gz
+  else
+    echo "lazygit already installed — skipping"
+  fi
 fi
 
 # ---------------------------------------------------------------------------
