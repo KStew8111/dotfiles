@@ -35,30 +35,47 @@ return {
         return
       end
 
-      -- 2. Build the devcontainer up command, including dotfiles settings
-      --    so it matches what :DevcontainerUp would do.
-      local up_cmd = devcontainer_bin .. " up --workspace-folder '" .. workspace .. "'"
-      up_cmd = up_cmd .. " --remove-existing-container"
-      up_cmd = up_cmd .. " --update-remote-user-uid-default off"
-
-      if opts.dotfiles_repository and opts.dotfiles_repository ~= "" then
-        up_cmd = up_cmd .. " --dotfiles-repository '" .. opts.dotfiles_repository .. "'"
-        if opts.dotfiles_targetPath and opts.dotfiles_targetPath ~= "" then
-          up_cmd = up_cmd .. " --dotfiles-target-path '" .. opts.dotfiles_targetPath .. "'"
-        end
-        -- The plugin internally reads `dotfiles_install_command` (snake_case).
-        local install_cmd = opts.dotfiles_install_command or opts.dotfiles_installCommand
-        if install_cmd and install_cmd ~= "" then
-          up_cmd = up_cmd .. " --dotfiles-install-command '" .. install_cmd .. "'"
-        end
-      end
-
+      -- 2. Build the exec command (primary path: just connect to a running container).
       local nvim_binary = opts.nvim_binary or "nvim"
       local exec_cmd = devcontainer_bin .. " exec --workspace-folder '" .. workspace .. "' " .. nvim_binary
 
+      -- 3. Check whether a devcontainer is already running for this workspace.
+      --    The devcontainer CLI labels containers with the path to their
+      --    devcontainer.json, so we can avoid an unnecessary `up` (and the
+      --    postCreateCommand re-run / rebuild that comes with it).
+      local devcontainer_json = workspace .. "/.devcontainer/devcontainer.json"
+      local docker_check = "docker ps -q --filter label=devcontainer.config_file=" .. vim.fn.shellescape(devcontainer_json)
+      local running_container = vim.trim(vim.fn.system(docker_check) or "")
+      local container_running = running_container ~= ""
+
       -- Shell command that keeps the terminal open if either up or exec fails,
       -- so the error is visible instead of the window closing instantly.
-      local shell_cmd = "(" .. up_cmd .. " && " .. exec_cmd .. ") || (ec=$?; echo 'DevcontainerConnect failed with exit code '$ec; read -rsp 'Press Enter to close...' _; exit $ec)"
+      local shell_cmd
+      if container_running then
+        vim.notify("DevcontainerConnect: existing container found, exec directly.", vim.log.levels.INFO)
+        shell_cmd = "(" .. exec_cmd .. ") || (ec=$?; echo 'DevcontainerConnect failed with exit code '$ec; read -rsp 'Press Enter to close...' _; exit $ec)"
+      else
+        vim.notify("DevcontainerConnect: no running container found, bringing one up.", vim.log.levels.INFO)
+        -- Build the devcontainer up command. NOTE: we intentionally do NOT use
+        -- --remove-existing-container here; connect should reuse an existing
+        -- container, not destroy and rebuild it every time.
+        local up_cmd = devcontainer_bin .. " up --workspace-folder '" .. workspace .. "'"
+        up_cmd = up_cmd .. " --update-remote-user-uid-default off"
+
+        if opts.dotfiles_repository and opts.dotfiles_repository ~= "" then
+          up_cmd = up_cmd .. " --dotfiles-repository '" .. opts.dotfiles_repository .. "'"
+          if opts.dotfiles_targetPath and opts.dotfiles_targetPath ~= "" then
+            up_cmd = up_cmd .. " --dotfiles-target-path '" .. opts.dotfiles_targetPath .. "'"
+          end
+          -- The plugin internally reads `dotfiles_install_command` (snake_case).
+          local install_cmd = opts.dotfiles_install_command or opts.dotfiles_installCommand
+          if install_cmd and install_cmd ~= "" then
+            up_cmd = up_cmd .. " --dotfiles-install-command '" .. install_cmd .. "'"
+          end
+        end
+
+        shell_cmd = "(" .. up_cmd .. " && " .. exec_cmd .. ") || (ec=$?; echo 'DevcontainerConnect failed with exit code '$ec; read -rsp 'Press Enter to close...' _; exit $ec)"
+      end
 
       local cmd = {}
       local term_name = "gnome-terminal"
