@@ -7,13 +7,13 @@ set -e
 # ---------------------------------------------------------------------------
 ALL=false
 INSTALL_NVIM=false
-INSTALL_OPENCODE=false
+INSTALL_PI=false
+INSTALL_COPILOT=false
 INSTALL_ZSH=false
 INSTALL_GHOSTTY=false
 INSTALL_ZELLIJ=false
 INSTALL_LAZYGIT=false
 SET_SHELL=false
-LOGIN_PROVIDERS=false
 
 usage() {
   cat <<'EOF'
@@ -25,13 +25,13 @@ are installed.
 Options:
   -a, --all          Install all components
   -n, --nvim         Install Neovim and stow the AstroNvim configuration
-  -o, --opencode     Install opencode and stow its configuration
+  -i, --pi           Install pi coding agent (npm global)
+  -c, --copilot      Install GitHub Copilot CLI (npm global) and stow skills
   -z, --zsh          Install zsh, oh-my-zsh, and stow the zsh configuration
   -g, --ghostty      Install ghostty and stow its configuration (x86_64 only)
   -j, --zellij       Install zellij and stow its configuration
   -l, --lazygit      Install lazygit
       --chsh         Change the default login shell to zsh
-  -p, --providers    Run 'opencode providers login' (interactive)
   -h, --help         Show this help message
 
 Examples:
@@ -51,8 +51,12 @@ while [[ $# -gt 0 ]]; do
       INSTALL_NVIM=true
       shift
       ;;
-    -o|--opencode)
-      INSTALL_OPENCODE=true
+    -i|--pi)
+      INSTALL_PI=true
+      shift
+      ;;
+    -c|--copilot)
+      INSTALL_COPILOT=true
       shift
       ;;
     -z|--zsh)
@@ -75,10 +79,6 @@ while [[ $# -gt 0 ]]; do
       SET_SHELL=true
       shift
       ;;
-    -p|--providers)
-      LOGIN_PROVIDERS=true
-      shift
-      ;;
     -h|--help)
       usage
       exit 0
@@ -92,13 +92,14 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Default to --all when no component flags are provided.
-if ! $ALL && ! $INSTALL_NVIM && ! $INSTALL_OPENCODE && ! $INSTALL_ZSH && ! $INSTALL_GHOSTTY && ! $INSTALL_ZELLIJ && ! $INSTALL_LAZYGIT; then
+if ! $ALL && ! $INSTALL_NVIM && ! $INSTALL_PI && ! $INSTALL_COPILOT && ! $INSTALL_ZSH && ! $INSTALL_GHOSTTY && ! $INSTALL_ZELLIJ && ! $INSTALL_LAZYGIT; then
   ALL=true
 fi
 
 if $ALL; then
   INSTALL_NVIM=true
-  INSTALL_OPENCODE=true
+  INSTALL_PI=true
+  INSTALL_COPILOT=true
   INSTALL_ZSH=true
   INSTALL_GHOSTTY=true
   INSTALL_ZELLIJ=true
@@ -144,6 +145,17 @@ case "$TARGET_ARCH" in
   aarch64) NVIM_TARBALL="nvim-linux-arm64" ;;
   x86_64)  NVIM_TARBALL="nvim-linux-x86_64" ;;
 esac
+
+# ---------------------------------------------------------------------------
+# npm helper
+# ---------------------------------------------------------------------------
+ensure_npm_prefix() {
+  # Use a user-writable global prefix so `npm install -g` doesn't need sudo.
+  if ! grep -q 'prefix=' "$HOME/.npmrc" 2>/dev/null; then
+    echo "prefix=$HOME/.npm-global" >> "$HOME/.npmrc"
+  fi
+  mkdir -p "$HOME/.npm-global/bin"
+}
 
 # ---------------------------------------------------------------------------
 # Installers
@@ -267,8 +279,28 @@ if $INSTALL_LAZYGIT; then
 fi
 
 # ---------------------------------------------------------------------------
-# Providers (interactive)
+# pi coding agent
 # ---------------------------------------------------------------------------
-if $LOGIN_PROVIDERS; then
-  opencode providers login
+if $INSTALL_PI; then
+  if command -v npm >/dev/null 2>&1; then
+    ensure_npm_prefix
+    echo "Installing pi coding agent..."
+    npm install -g @earendil-works/pi-coding-agent
+  else
+    echo "⚠  npm not found — skipping pi install. Install nodejs/npm first."
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# GitHub Copilot CLI
+# ---------------------------------------------------------------------------
+if $INSTALL_COPILOT; then
+  if command -v npm >/dev/null 2>&1; then
+    ensure_npm_prefix
+    echo "Installing GitHub Copilot CLI..."
+    npm install -g @github/copilot
+    stow -t "$HOME" copilot
+  else
+    echo "⚠  npm not found — skipping copilot install. Install nodejs/npm first."
+  fi
 fi
