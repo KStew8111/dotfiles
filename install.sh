@@ -149,6 +149,19 @@ esac
 # ---------------------------------------------------------------------------
 # npm helper
 # ---------------------------------------------------------------------------
+ensure_npm() {
+  # Install nodejs + npm if not already available.
+  if ! command -v npm >/dev/null 2>&1; then
+    echo "Installing nodejs and npm..."
+    sudo apt-get update && sudo apt-get install -y nodejs npm
+  fi
+
+  if ! command -v npm >/dev/null 2>&1; then
+    echo "⚠  npm still not found after install attempt — skipping npm-based tools."
+    return 1
+  fi
+}
+
 ensure_npm_prefix() {
   # Use a user-writable global prefix so `npm install -g` doesn't need sudo.
   if ! grep -q 'prefix=' "$HOME/.npmrc" 2>/dev/null; then
@@ -282,12 +295,10 @@ fi
 # pi coding agent
 # ---------------------------------------------------------------------------
 if $INSTALL_PI; then
-  if command -v npm >/dev/null 2>&1; then
+  if ensure_npm; then
     ensure_npm_prefix
     echo "Installing pi coding agent..."
     npm install -g @earendil-works/pi-coding-agent
-  else
-    echo "⚠  npm not found — skipping pi install. Install nodejs/npm first."
   fi
 fi
 
@@ -295,12 +306,10 @@ fi
 # GitHub Copilot CLI
 # ---------------------------------------------------------------------------
 if $INSTALL_COPILOT; then
-  if command -v npm >/dev/null 2>&1; then
+  if ensure_npm; then
     ensure_npm_prefix
     echo "Installing GitHub Copilot CLI..."
     npm install -g @github/copilot
     stow -t "$HOME" copilot
-  else
-    echo "⚠  npm not found — skipping copilot install. Install nodejs/npm first."
   fi
 fi
