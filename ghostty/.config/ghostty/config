@@ -1,60 +1,7 @@
-# This is the configuration file for Ghostty.
-#
-# This template file has been automatically created at the following
-# path since Ghostty couldn't find any existing config files on your system:
-#
-#   /home/kyle/.config/ghostty/config
-#
-# The template does not set any default options, since Ghostty ships
-# with sensible defaults for all options. Users should only need to set
-# options that they want to change from the default.
-#
-# Run `ghostty +show-config --default --docs` to view a list of
-# all available config options and their default values.
-#
-# Additionally, each config option is also explained in detail
-# on Ghostty's website, at https://ghostty.org/docs/config.
-#
-# Ghostty can reload the configuration while running by using the menu
-# options or the bound key (default: Command + Shift + comma on macOS and
-# Control + Shift + comma on other platforms). Not all config options can be
-# reloaded while running; some only apply to new windows and others may require
-# a full restart to take effect.
+# Ghostty configuration
+# https://ghostty.org/docs/config
 
-# Config syntax crash course
-# ==========================
-# # The config file consists of simple key-value pairs,
-# # separated by equals signs.
-# font-family = Iosevka
-# window-padding-x = 2
-#
-# # Spacing around the equals sign does not matter.
-# # All of these are identical:
-# key=value
-# key= value
-# key =value
-# key = value
-#
-# # Any line beginning with a # is a comment. It's not possible to put
-# # a comment after a config option, since it would be interpreted as a
-# # part of the value. For example, this will have a value of "#123abc":
-# background = #123abc
-#
-# # Empty values are used to reset config keys to default.
-# key =
-#
-# # Some config options have unique syntaxes for their value,
-# # which is explained in the docs for that config option.
-# # Just for example:
-# resize-overlay-duration = 4s 200ms
-
-maximize=true
-
-
-# Theme & Transparency
-# theme = catppuccin-mocha
-# window-background-opacity = 0.85
-# window-blur-radius = 20
+maximize = true
 
 # Typography
 font-family = "CaskaydiaMono Nerd Font"
@@ -72,7 +19,7 @@ cursor-style-blink = true
 
 copy-on-select = true
 
-# --- Ghostty Colors (Ported from Alacritty) ---
+# --- Colors ---
 palette = 0=#333333
 palette = 1=#D35F5F
 palette = 2=#FFC107
@@ -97,23 +44,10 @@ cursor-text = 121212
 selection-background = 333333
 selection-foreground = bebebe
 
-# --- Window Settings ---
-window-padding-x = 12
-window-padding-y = 12
-window-decoration = false
-
-# --- Typography ---
-font-size = 12
-
-# --- Style Enhancements ---
-# Since you have a dark aesthetic, a slight transparency 
-# often looks great with this specific palette.
+# --- Style ---
 background-opacity = 0.95
 background-blur-radius = 20
 
-# Command
-# command = zellij
-
+# --- Shell ---
 shell-integration-features = ssh-terminfo
-
 mouse-scroll-multiplier = 1
