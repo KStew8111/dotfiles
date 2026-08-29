@@ -299,6 +299,7 @@ if $INSTALL_PI; then
     ensure_npm_prefix
     echo "Installing pi coding agent..."
     npm install -g @earendil-works/pi-coding-agent
+    stow -t "$HOME" pi
   fi
   # Stow pi config (settings, AGENTS.md, prompt templates) before first run so
   # pi's session state lands alongside stowed files, not on top of them.
