@@ -25,7 +25,7 @@ are installed.
 Options:
   -a, --all          Install all components
   -n, --nvim         Install Neovim and stow the AstroNvim configuration
-  -i, --pi           Install pi coding agent (npm global)
+  -i, --pi           Install pi coding agent (npm global) and stow its configuration
   -c, --copilot      Install GitHub Copilot CLI (npm global) and stow skills
   -z, --zsh          Install zsh, oh-my-zsh, and stow the zsh configuration
   -g, --ghostty      Install ghostty and stow its configuration (x86_64 only)
@@ -300,6 +300,15 @@ if $INSTALL_PI; then
     echo "Installing pi coding agent..."
     npm install -g @earendil-works/pi-coding-agent
   fi
+  # Stow pi config (settings, AGENTS.md, prompt templates) before first run so
+  # pi's session state lands alongside stowed files, not on top of them.
+  stow -t "$HOME" pi
+  echo "Installing pi extensions..."
+  pi install npm:@pandi-coding-agent/pandi-plan
+  pi install npm:@zjie-wang/pi-todo
+  pi install npm:@zjie-wang/pi-ask-user
+  pi install npm:pi-subagents
+  pi install npm:@georgedong32/pi-review
 fi
 
 # ---------------------------------------------------------------------------

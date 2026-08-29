@@ -1,0 +1,14 @@
+{
+  "lastChangelogVersion": "0.84.4",
+  "theme": "dark",
+  "defaultProvider": "ollama-cloud",
+  "defaultModel": "glm-5.2:cloud",
+  "defaultThinkingLevel": "medium",
+  "packages": [
+    "npm:@pandi-coding-agent/pandi-plan",
+    "npm:@zjie-wang/pi-todo",
+    "npm:@zjie-wang/pi-ask-user",
+    "npm:@georgedong32/pi-review",
+    "npm:pi-subagents"
+  ]
+}
