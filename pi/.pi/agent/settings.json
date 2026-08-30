@@ -2,13 +2,18 @@
   "lastChangelogVersion": "0.84.4",
   "theme": "dark",
   "defaultProvider": "ollama-cloud",
-  "defaultModel": "glm-5.2:cloud",
+  "defaultModel": "glm-5.3-flash:cloud",
   "defaultThinkingLevel": "medium",
   "packages": [
-    "npm:@pandi-coding-agent/pandi-plan",
+    "npm:@pandi-coding-agent/plan",
     "npm:@zjie-wang/pi-todo",
     "npm:@zjie-wang/pi-ask-user",
     "npm:@georgedong32/pi-review",
     "npm:pi-subagents"
+  ],
+  "enabledModels": [
+    "ollama-cloud/glm-5.3:cloud",
+    "ollama-cloud/glm-5.3-flash:cloud",
+    "ollama-cloud/kimi-k2.7-code:cloud"
   ]
 }
