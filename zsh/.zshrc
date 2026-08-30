@@ -129,3 +129,7 @@ export PATH="$HOME/.npm-global/bin:$PATH"
 # ROS 2 autocomplete
 eval "$(register-python-argcomplete ros2)"
 eval "$(register-python-argcomplete colcon)"
+
+# pi plan-mode model switching (see ~/.pi/agent/extensions/plan-model-switch.ts)
+export PI_PLAN_IMPL_MODEL="ollama-cloud/kimi-k2.7-code:cloud"
+export PI_PLAN_PLANNER_MODEL="ollama-cloud/glm-5.3:cloud"

@@ -6,3 +6,4 @@ pi/.pi/agent/models-store.json
 pi/.pi/agent/sessions/
 pi/.pi/agent/npm/
 pi/.pi/agent/missions/
+pi/.pi/agent/tmp/

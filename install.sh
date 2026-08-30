@@ -305,7 +305,10 @@ if $INSTALL_PI; then
   # pi's session state lands alongside stowed files, not on top of them.
   stow -t "$HOME" pi
   echo "Installing pi extensions..."
-  pi install npm:@pandi-coding-agent/pandi-plan
+  # NOTE: @pandi-coding-agent/pandi-plan is the renamed upstream package, but its
+  # prompts are Spanish-only. @pandi-coding-agent/plan@0.1.2 is the last English
+  # release (deprecated upstream with a rename notice — the warning is harmless).
+  pi install npm:@pandi-coding-agent/plan
   pi install npm:@zjie-wang/pi-todo
   pi install npm:@zjie-wang/pi-ask-user
   pi install npm:pi-subagents
