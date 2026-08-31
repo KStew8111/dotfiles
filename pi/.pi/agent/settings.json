@@ -5,7 +5,7 @@
   "defaultModel": "glm-5.3-flash:cloud",
   "defaultThinkingLevel": "medium",
   "packages": [
-    "npm:@pandi-coding-agent/plan",
+    "npm:@narumitw/pi-plan-mode",
     "npm:@zjie-wang/pi-todo",
     "npm:@zjie-wang/pi-ask-user",
     "npm:@georgedong32/pi-review",

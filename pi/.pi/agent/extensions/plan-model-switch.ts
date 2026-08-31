@@ -1,12 +1,14 @@
 /**
  * plan-model-switch — auto-switch models at the plan-mode boundary.
  *
- * Pairs with the @pandi-coding-agent/plan extension. When a plan is APPROVED,
- * the plan extension persists a `plan-state` session entry with
- * status "approved" and wakes the implementation turn via sendUserMessage.
- * That wake prompt fires pi's `before_agent_start` event before any LLM call,
- * so we hook it there and switch the model — planning stays on e.g. glm-5.3,
- * implementation starts on a different model, with no manual /model needed.
+ * Pairs with the @narumitw/pi-plan-mode extension. When a plan is ACCEPTED,
+ * the extension persists a `plan-mode-state` session entry carrying an
+ * `activeImplementation` object (via an in-session handoff or a fresh
+ * implementation session's setup entry) and wakes the implementation turn via
+ * sendUserMessage. That wake prompt fires pi's `before_agent_start` event
+ * before any LLM call, so we hook it there and switch the model — planning
+ * stays on e.g. glm-5.3, implementation starts on a different model, with
+ * no manual /model needed.
  *
  * Configuration (environment variables, see README/docs):
  *
@@ -28,19 +30,23 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { Model } from "@earendil-works/pi-ai";
 
-/** Shape of the `plan-state` custom entries appended by @pandi-coding-agent/plan. */
-interface PlanStateData {
-	planId: string;
-	task?: string;
-	active?: boolean;
-	status?: "planning" | "approved" | "rejected" | "exited" | "planned";
-	startedAt?: number;
+/** Shape of the `plan-mode-state` custom entries appended by @narumitw/pi-plan-mode. */
+interface PlanModeStateEntry {
+	enabled?: boolean;
+	awaitingAction?: boolean;
+	activeImplementation?: {
+		id: string;
+		plan?: string;
+		source?: string;
+		startedAt?: number;
+		retention?: string;
+	};
 }
 
 type ThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max";
 const THINKING_LEVELS: ThinkingLevel[] = ["off", "minimal", "low", "medium", "high", "xhigh", "max"];
 
-const PLAN_STATE_TYPE = "plan-state";
+const PLAN_STATE_TYPE = "plan-mode-state";
 
 interface SwitchTarget {
 	spec: string;
@@ -72,15 +78,15 @@ const plannerTarget = parseTarget(process.env.PI_PLAN_PLANNER_MODEL, process.env
 /** No-op unless a switch is configured. */
 const enabled = Boolean(implTarget || plannerTarget);
 
-/** planIds already switched to the implementation model this session (switch only once per approved plan). */
-const handledPlans = new Set<string>();
+/** Implementation ids already switched to the implementation model this session (switch only once per accepted plan). */
+const handledImplementations = new Set<string>();
 
-/** Latest `plan-state` entry (append-only session log → last write wins). */
-function latestPlanState(ctx: ExtensionContext): PlanStateData | undefined {
-	let latest: PlanStateData | undefined;
+/** Latest `plan-mode-state` entry (append-only session log → last write wins). */
+function latestPlanModeState(ctx: ExtensionContext): PlanModeStateEntry | undefined {
+	let latest: PlanModeStateEntry | undefined;
 	for (const entry of ctx.sessionManager.getEntries() as Array<{ type: string; customType?: string; data?: unknown }>) {
 		if (entry.type === "custom" && entry.customType === PLAN_STATE_TYPE && entry.data) {
-			latest = entry.data as PlanStateData;
+			latest = entry.data as PlanModeStateEntry;
 		}
 	}
 	return latest;
@@ -131,14 +137,16 @@ async function switchModel(pi: ExtensionAPI, ctx: ExtensionContext, target: Swit
 export default function planModelSwitchExtension(pi: ExtensionAPI): void {
 	pi.on("before_agent_start", async (_event, ctx) => {
 		if (!enabled) return;
-		const plan = latestPlanState(ctx);
-		if (!plan?.planId || !plan.status) return;
-		if (plan.status === "approved") {
-			if (handledPlans.has(plan.planId)) return; // already switched for this plan
-			handledPlans.add(plan.planId);
+		const plan = latestPlanModeState(ctx);
+		if (!plan) return;
+		if (plan.activeImplementation?.id) {
+			// A plan was accepted — we are in an implementation turn.
+			const implId = plan.activeImplementation.id;
+			if (handledImplementations.has(implId)) return; // already switched for this implementation
+			handledImplementations.add(implId);
 			if (implTarget) await switchModel(pi, ctx, implTarget, "implementation");
-		} else if (plan.status === "planning") {
-			// A plan was armed (or a revision was rejected): go back to the planner model if configured.
+		} else if (plan.enabled) {
+			// Plan mode is active: go to (or stay on) the planner model.
 			if (plannerTarget) await switchModel(pi, ctx, plannerTarget, "planning");
 		}
 	});
@@ -152,7 +160,7 @@ export default function planModelSwitchExtension(pi: ExtensionAPI): void {
 				`Current model: ${current}\n` +
 					`On plan approval → ${fmt(implTarget)}${implTarget ? "" : " [set PI_PLAN_IMPL_MODEL]"}\n` +
 					`On plan start → ${fmt(plannerTarget)}${plannerTarget ? "" : " [set PI_PLAN_PLANNER_MODEL]"}\n` +
-					`Handled plans: ${[...handledPlans].join(", ") || "(none)"}`,
+					`Handled implementations: ${[...handledImplementations].join(", ") || "(none)"}`,
 				"info",
 			);
 		},
