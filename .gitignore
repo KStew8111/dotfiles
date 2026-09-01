@@ -1,5 +1,8 @@
 .zshrc.local
 
+# lazy-lock.json is managed by Lazy.nvim on each machine; don't commit its drift
+nvim-legacy/.config/nvim/lazy-lock.json
+
 # pi agent runtime state & secrets (never commit)
 pi/.pi/agent/auth.json
 pi/.pi/agent/models-store.json
