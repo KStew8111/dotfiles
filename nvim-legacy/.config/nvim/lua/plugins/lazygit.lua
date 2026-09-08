@@ -1,5 +1,13 @@
 return {
   "kdheepak/lazygit.nvim",
+  -- Pinned to the last commit that spawns lazygit via `termopen`. Later commits
+  -- (2025-07-19, 0cb05f46 "update deprecated vim api usage", through the
+  -- previously-locked a04ad0d) use `jobstart(..., { term = true })`, an option
+  -- that only exists on Neovim >= 0.11. On Neovim 0.10.4 that option is
+  -- silently ignored: jobstart starts no terminal, the floating window opens
+  -- empty/black, and nothing appears in :messages. (Verified against a real
+  -- nvim 0.10.4 binary.) Do not bump this pin while this config targets 0.10.4.
+  commit = "0a3a4c5e5203acfec555a834b5108ffa8abf7225",
   cmd = {
     "LazyGit",
     "LazyGitConfig",
