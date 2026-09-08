@@ -88,6 +88,14 @@ return {
       end
     end)
 
-    require("lazygit").setup()
+    -- NOTE: kdheepak/lazygit.nvim intentionally has no `setup()` — the module
+    -- only exposes command handlers (lazygit, lazygitcurrentfile, ...) and
+    -- plugin/lazygit.vim registers the :LazyGit* commands and reads
+    -- vim.g.lazygit_* options. The previous require("lazygit").setup() call
+    -- threw `attempt to call field 'setup' (a nil value)` on every load,
+    -- surfacing as "failed to run `config` for lazygit.nvim".
+    -- Tune the float via vim.g options instead, e.g.:
+    --   vim.g.lazygit_floating_window_winblend = 0
+    --   vim.g.lazygit_floating_window_scaling_factor = 0.9
   end,
 }
