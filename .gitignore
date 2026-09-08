@@ -1,7 +1,14 @@
 .zshrc.local
 
-# lazy-lock.json is managed by Lazy.nvim on each machine; don't commit its drift
-nvim-legacy/.config/nvim/lazy-lock.json
+# The nvim (AstroNvim v6) config tracks current releases, so its lockfile is
+# regenerated per machine and left uncommitted:
+nvim/.config/nvim/lazy-lock.json
+#
+# The nvim-legacy (AstroNvim v5 / Neovim 0.10.4) config must be deterministic in
+# Ubuntu 22.04 devcontainers, so its lockfile IS committed. A previously-ignored
+# lockfile silently drifted astrocore to v3 (incompatible with frozen
+# nvim-treesitter master) and broke startup. Update it deliberately:
+# `:Lazy update`, verify, then commit the change.
 
 # pi agent runtime state & secrets (never commit)
 pi/.pi/agent/auth.json
