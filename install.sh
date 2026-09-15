@@ -9,6 +9,7 @@ ALL=false
 INSTALL_NVIM=false
 INSTALL_PI=false
 INSTALL_COPILOT=false
+INSTALL_BEADS=false
 INSTALL_ZSH=false
 INSTALL_GHOSTTY=false
 INSTALL_ZELLIJ=false
@@ -27,6 +28,7 @@ Options:
   -n, --nvim         Install Neovim and stow the AstroNvim configuration
   -i, --pi           Install pi coding agent (npm global) and stow its configuration
   -c, --copilot      Install GitHub Copilot CLI (npm global) and stow skills
+  -b, --beads        Install beads issue tracker CLI (npm global)
   -z, --zsh          Install zsh, oh-my-zsh, and stow the zsh configuration
   -g, --ghostty      Install ghostty and stow its configuration (x86_64 only)
   -j, --zellij       Install zellij and stow its configuration
@@ -57,6 +59,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     -c|--copilot)
       INSTALL_COPILOT=true
+      shift
+      ;;
+    -b|--beads)
+      INSTALL_BEADS=true
       shift
       ;;
     -z|--zsh)
@@ -92,7 +98,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Default to --all when no component flags are provided.
-if ! $ALL && ! $INSTALL_NVIM && ! $INSTALL_PI && ! $INSTALL_COPILOT && ! $INSTALL_ZSH && ! $INSTALL_GHOSTTY && ! $INSTALL_ZELLIJ && ! $INSTALL_LAZYGIT; then
+if ! $ALL && ! $INSTALL_NVIM && ! $INSTALL_PI && ! $INSTALL_COPILOT && ! $INSTALL_BEADS && ! $INSTALL_ZSH && ! $INSTALL_GHOSTTY && ! $INSTALL_ZELLIJ && ! $INSTALL_LAZYGIT; then
   ALL=true
 fi
 
@@ -100,6 +106,7 @@ if $ALL; then
   INSTALL_NVIM=true
   INSTALL_PI=true
   INSTALL_COPILOT=true
+  INSTALL_BEADS=true
   INSTALL_ZSH=true
   INSTALL_GHOSTTY=true
   INSTALL_ZELLIJ=true
@@ -321,5 +328,19 @@ if $INSTALL_COPILOT; then
     echo "Installing GitHub Copilot CLI..."
     npm install -g @github/copilot
     stow -t "$HOME" copilot
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# beads issue tracker CLI
+# ---------------------------------------------------------------------------
+# Task management tool for coding agents. The npm package (@beads/bd) wraps
+# the native `bd` binary, which its postinstall script downloads from GitHub
+# releases. Config lives per-repo in .beads/, so there is nothing to stow.
+if $INSTALL_BEADS; then
+  if ensure_npm; then
+    ensure_npm_prefix
+    echo "Installing beads CLI..."
+    npm install -g @beads/bd
   fi
 fi
