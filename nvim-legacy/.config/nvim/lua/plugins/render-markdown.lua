@@ -18,5 +18,12 @@ return {
   -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
   ---@module 'render-markdown'
   ---@type render.md.UserConfig
-  opts = {},
+  -- nvim 0.10.4 (container) + render-markdown v8.x: TSNode:widths() returns
+  -- an empty table for fenced code blocks, so every markdown file with a
+  -- fence crashed with
+  --   "code.lua:46: attempt to perform arithmetic on a nil value"
+  -- "none" skips that padding calculation; the treesitter parser's own
+  -- highlighting inside code blocks is unaffected.  Revisit if the
+  -- container's nvim is ever upgraded past 0.10.
+  opts = { code = { style = "none" } },
 }
