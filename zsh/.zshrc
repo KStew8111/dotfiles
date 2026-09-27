@@ -72,7 +72,9 @@ zstyle ':omz:update' mode auto      # update automatically without asking
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(git)
 
-source $ZSH/oh-my-zsh.sh
+if [[ -f "$ZSH/oh-my-zsh.sh" ]]; then
+    source "$ZSH/oh-my-zsh.sh"
+fi
 
 # User configuration
 
@@ -108,7 +110,9 @@ if [[ -f "$HOME/.zshrc.local" ]]; then
 fi
 
 # Cargo
-. "$HOME/.cargo/env"
+if [[ -f "$HOME/.cargo/env" ]]; then
+    . "$HOME/.cargo/env"
+fi
 
 # nvim
 PATH=$PATH:/opt/nvim-linux-x86_64/bin
@@ -118,20 +122,28 @@ mkdir -p ${ZDOTDIR:-~}/.zsh_functions
 fpath+=${ZDOTDIR:-~}/.zsh_functions
 
 # ROS 
-source /opt/ros/jazzy/setup.zsh
+if [[ -f /opt/ros/jazzy/setup.zsh ]]; then
+    source /opt/ros/jazzy/setup.zsh
+fi
 export ISAAC_ROS_WS="${ISAAC_ROS_WS:-${HOME}/workspaces/isaac_ros-dev/}"
 
 # Mise 
-eval "$(mise activate zsh)"
+if command -v mise &>/dev/null; then
+    eval "$(mise activate zsh)"
+fi
 
 export PATH="$HOME/.npm-global/bin:$PATH"
 
 # ROS 2 autocomplete
-eval "$(register-python-argcomplete ros2)"
-eval "$(register-python-argcomplete colcon)"
+if command -v register-python-argcomplete &>/dev/null; then
+    eval "$(register-python-argcomplete ros2)"
+    eval "$(register-python-argcomplete colcon)"
+fi
 
 # pi plan-mode model switching (see ~/.pi/agent/extensions/plan-model-switch.ts)
 export PI_PLAN_IMPL_MODEL="ollama-cloud/kimi-k2.7-code:cloud"
 export PI_PLAN_PLANNER_MODEL="ollama-cloud/glm-5.3:cloud"
 
-. "$HOME/.local/bin/env"
+if [[ -f "$HOME/.local/bin/env" ]]; then
+    . "$HOME/.local/bin/env"
+fi
