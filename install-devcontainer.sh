@@ -4,7 +4,11 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-./install.sh --nvim --zsh --chsh --lazygit --beads
+./install.sh --nvim --zsh --chsh --lazygit --beads --gh
+
+# gh authentication in a devcontainer: there is no desktop session, so
+# install.sh will not attempt an interactive login. Provide a token via the
+# GH_TOKEN build arg / container env and the installer uses it automatically.
 
 # ---------------------------------------------------------------------------
 # PATH for the devcontainer's default shell

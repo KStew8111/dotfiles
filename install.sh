@@ -14,6 +14,9 @@ INSTALL_ZSH=false
 INSTALL_GHOSTTY=false
 INSTALL_ZELLIJ=false
 INSTALL_LAZYGIT=false
+INSTALL_GH=false
+GH_SKIP_AUTH=false
+GH_TOKEN_ARG=""
 SET_SHELL=false
 
 usage() {
@@ -33,6 +36,9 @@ Options:
   -g, --ghostty      Install ghostty and stow its configuration (x86_64 only)
   -j, --zellij       Install zellij and stow its configuration
   -l, --lazygit      Install lazygit
+  -G, --gh           Install GitHub CLI and authenticate (login skipped when headless)
+      --gh-token T   Authenticate gh with token T instead of interactive login
+      --no-auth      With --gh, install gh without authenticating
       --chsh         Change the default login shell to zsh
   -h, --help         Show this help message
 
@@ -40,6 +46,8 @@ Examples:
   install.sh                        # Install all components, non-interactively
   install.sh --zsh --chsh           # Install zsh and make it the default shell
   install.sh --nvim --zellij        # Install only nvim and zellij
+  install.sh --gh --no-auth         # Install gh, leave authentication to you
+  install.sh --gh --gh-token "$TOK" # Install and authenticate gh non-interactively
 EOF
 }
 
@@ -81,6 +89,23 @@ while [[ $# -gt 0 ]]; do
       INSTALL_LAZYGIT=true
       shift
       ;;
+    -G|--gh)
+      INSTALL_GH=true
+      shift
+      ;;
+    --gh-token)
+      if [[ -z ${2:-} || ${2} == -* ]]; then
+        echo "Missing value for --gh-token" >&2
+        exit 1
+      fi
+      GH_TOKEN_ARG="$2"
+      INSTALL_GH=true
+      shift 2
+      ;;
+    --no-auth)
+      GH_SKIP_AUTH=true
+      shift
+      ;;
     --chsh)
       SET_SHELL=true
       shift
@@ -98,7 +123,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Default to --all when no component flags are provided.
-if ! $ALL && ! $INSTALL_NVIM && ! $INSTALL_PI && ! $INSTALL_COPILOT && ! $INSTALL_BEADS && ! $INSTALL_ZSH && ! $INSTALL_GHOSTTY && ! $INSTALL_ZELLIJ && ! $INSTALL_LAZYGIT; then
+if ! $ALL && ! $INSTALL_NVIM && ! $INSTALL_PI && ! $INSTALL_COPILOT && ! $INSTALL_BEADS && ! $INSTALL_ZSH && ! $INSTALL_GHOSTTY && ! $INSTALL_ZELLIJ && ! $INSTALL_LAZYGIT && ! $INSTALL_GH; then
   ALL=true
 fi
 
@@ -111,6 +136,7 @@ if $ALL; then
   INSTALL_GHOSTTY=true
   INSTALL_ZELLIJ=true
   INSTALL_LAZYGIT=true
+  INSTALL_GH=true
 fi
 
 cd "$HOME/dotfiles"
@@ -295,6 +321,95 @@ if $INSTALL_LAZYGIT; then
     rm -f /tmp/lazygit.tar.gz
   else
     echo "lazygit already installed — skipping"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# GitHub CLI
+# ---------------------------------------------------------------------------
+authenticate_gh() {
+  # Already logged in? Nothing to do.
+  if gh auth status >/dev/null 2>&1; then
+    echo "gh already authenticated — skipping login"
+    return 0
+  fi
+
+  # Precedence: explicit --gh-token, then gh's own env var, then the
+  # conventional one. Record where the token came from so the log is honest.
+  local token="${GH_TOKEN_ARG:-}"
+  local source="--gh-token"
+  if [[ -z $token && -n ${GH_TOKEN:-} ]]; then
+    token="$GH_TOKEN"
+    source="GH_TOKEN"
+  fi
+  if [[ -z $token && -n ${GITHUB_TOKEN:-} ]]; then
+    token="$GITHUB_TOKEN"
+    source="GITHUB_TOKEN"
+  fi
+
+  if [[ -n $token ]]; then
+    echo "Authenticating gh with token from ${source}..."
+    # --with-token reads the token from stdin; it is never echoed or logged.
+    if printf '%s\n' "$token" | gh auth login --with-token; then
+      gh auth setup-git
+    else
+      echo "⚠  gh token login failed — run 'gh auth login' manually." >&2
+    fi
+    return 0
+  fi
+
+  # No token supplied. Interactive login needs a TTY for the one-time code and
+  # a desktop session for the browser hop — in a headless or piped install
+  # there is nothing to talk to, so print instructions instead of hanging.
+  if [[ -t 0 && -n ${DISPLAY:-}${WAYLAND_DISPLAY:-} ]]; then
+    echo "Starting interactive gh login..."
+    gh auth login --hostname github.com --git-protocol https --web \
+      || echo "⚠  gh login did not complete — run 'gh auth login' manually." >&2
+    return 0
+  fi
+
+  cat <<'EOF'
+⚠  Skipping gh login: no token supplied and no desktop session detected.
+   Authenticate later with either of:
+     gh auth login
+     export GH_TOKEN=<your-pat> && install.sh --gh
+   Create a token at https://github.com/settings/tokens ('repo' scope).
+EOF
+}
+
+if $INSTALL_GH; then
+  if ! command -v gh >/dev/null 2>&1; then
+    GH_VER="2.102.0"
+    # gh's release archives use amd64/arm64, unlike the x86_64/aarch64 that
+    # lazygit and zellij use, so map separately.
+    case "$TARGET_ARCH" in
+      aarch64) GH_ARCH="arm64" ;;
+      x86_64)  GH_ARCH="amd64" ;;
+    esac
+    echo "Installing GitHub CLI ${GH_VER}..."
+    curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VER}/gh_${GH_VER}_linux_${GH_ARCH}.tar.gz" -o /tmp/gh.tar.gz
+    rm -rf /tmp/gh-extract
+    mkdir -p /tmp/gh-extract
+    tar -xzf /tmp/gh.tar.gz -C /tmp/gh-extract
+    # The archive nests the binary at <dir>/bin/gh, so extract then install it.
+    sudo install -m 0755 "/tmp/gh-extract/gh_${GH_VER}_linux_${GH_ARCH}/bin/gh" /usr/local/bin/gh
+    rm -rf /tmp/gh.tar.gz /tmp/gh-extract
+  else
+    echo "gh already installed — skipping"
+  fi
+
+  # gh lands in /usr/local/bin. If the caller's PATH omits it (minimal
+  # containers, some non-login shells) the login below would fail with
+  # "gh: command not found" right after a successful install, so add it.
+  case ":$PATH:" in
+    *:/usr/local/bin:*) ;;
+    *) PATH="/usr/local/bin:$PATH" ;;
+  esac
+
+  if $GH_SKIP_AUTH; then
+    echo "Skipping gh authentication (--no-auth)"
+  else
+    authenticate_gh
   fi
 fi
 
