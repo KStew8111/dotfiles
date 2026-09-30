@@ -1,0 +1,10 @@
+{
+  "phases": {
+    "planning": {
+      "model": { "provider": "ollama-cloud", "id": "glm-5.3:cloud" }
+    },
+    "executing": {
+      "model": { "provider": "ollama-cloud", "id": "kimi-k2.7-code:cloud" }
+    }
+  }
+}

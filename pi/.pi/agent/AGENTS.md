@@ -2,7 +2,8 @@
 
 ## Plan structure (applies whenever you produce an implementation plan)
 
-When asked to produce a plan — whether via plan mode (`/plan` / `plan_mode_complete`), the
+When asked to produce a plan — whether via Plannotator plan mode
+(`/plannotator-plan-mode` / `plannotator_submit_plan`), the
 `/write-plan` template, or any "plan this feature" request — structure the plan with
 these sections, in this order:
 

@@ -1,3 +1,9 @@
 [submodule "vendor/mattpocock-skills"]
 	path = vendor/mattpocock-skills
 	url = https://github.com/mattpocock/skills.git
+[submodule "vendor/humanlayer-skills"]
+	path = vendor/humanlayer-skills
+	url = https://github.com/humanlayer/skills.git
+[submodule "vendor/plannotator-effective-html"]
+	path = vendor/plannotator-effective-html
+	url = https://github.com/plannotator/effective-html.git

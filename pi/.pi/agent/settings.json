@@ -1,15 +1,18 @@
 {
-  "lastChangelogVersion": "0.87.1",
+  "lastChangelogVersion": "0.99.1",
   "theme": "dark",
   "defaultProvider": "ollama-cloud",
   "defaultModel": "glm-5.3-flash:cloud",
   "defaultThinkingLevel": "medium",
   "packages": [
-    "npm:@narumitw/pi-plan-mode",
     "npm:@zjie-wang/pi-todo",
     "npm:@zjie-wang/pi-ask-user",
     "npm:@georgedong32/pi-review",
-    "npm:pi-subagents"
+    "npm:pi-subagents",
+    "npm:@vanillagreen/pi-session-manager",
+    "npm:pi-agent-teleport",
+    "npm:pi-context-view",
+    "npm:@plannotator/pi-extension"
   ],
   "enabledModels": [
     "ollama-cloud/glm-5.3:cloud",

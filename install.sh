@@ -491,7 +491,6 @@ if $INSTALL_PI; then
   # pi's session state lands alongside stowed files, not on top of them.
   stow -t "$HOME" pi
   echo "Installing pi extensions..."
-  pi install npm:@narumitw/pi-plan-mode
   pi install npm:@zjie-wang/pi-todo
   pi install npm:@zjie-wang/pi-ask-user
   pi install npm:pi-subagents

@@ -140,9 +140,15 @@ if command -v register-python-argcomplete &>/dev/null; then
     eval "$(register-python-argcomplete colcon)"
 fi
 
-# pi plan-mode model switching (see ~/.pi/agent/extensions/plan-model-switch.ts)
-export PI_PLAN_IMPL_MODEL="ollama-cloud/kimi-k2.7-code:cloud"
-export PI_PLAN_PLANNER_MODEL="ollama-cloud/glm-5.3:cloud"
+# Plannotator (Pi) — browser plan/code review, opened over Tailscale.
+# PLANNOTATOR_REMOTE=1 is REQUIRED on this headless box: without it the server
+# binds 127.0.0.1 on a *random* port and is unreachable from the desktop.
+# PLANNOTATOR_PORT pins it so Serve / an SSH tunnel can be pointed at it.
+# PLANNOTATOR_URL_HOST is display-only (changes the printed URL, not the bind).
+# Per-phase models live in ~/.pi/agent/plannotator.json (NOT env vars).
+export PLANNOTATOR_REMOTE=1
+export PLANNOTATOR_PORT=19432
+export PLANNOTATOR_URL_HOST=auto
 
 if [[ -f "$HOME/.local/bin/env" ]]; then
     . "$HOME/.local/bin/env"
