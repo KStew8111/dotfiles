@@ -13,6 +13,7 @@ INSTALL_BEADS=false
 INSTALL_ZSH=false
 INSTALL_GHOSTTY=false
 INSTALL_ZELLIJ=false
+INSTALL_HERDR=false
 INSTALL_LAZYGIT=false
 INSTALL_GH=false
 GH_SKIP_AUTH=false
@@ -35,6 +36,8 @@ Options:
   -z, --zsh          Install zsh, oh-my-zsh, and stow the zsh configuration
   -g, --ghostty      Install ghostty and stow its configuration (x86_64 only)
   -j, --zellij       Install zellij and stow its configuration
+  -H, --herdr        Install herdr (agent-aware terminal multiplexer) and stow its
+                     configuration, then install the herdr Pi integration
   -l, --lazygit      Install lazygit
   -G, --gh           Install GitHub CLI and authenticate (login skipped when headless)
       --gh-token T   Authenticate gh with token T instead of interactive login
@@ -85,6 +88,10 @@ while [[ $# -gt 0 ]]; do
       INSTALL_ZELLIJ=true
       shift
       ;;
+    -H|--herdr)
+      INSTALL_HERDR=true
+      shift
+      ;;
     -l|--lazygit)
       INSTALL_LAZYGIT=true
       shift
@@ -123,7 +130,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Default to --all when no component flags are provided.
-if ! $ALL && ! $INSTALL_NVIM && ! $INSTALL_PI && ! $INSTALL_COPILOT && ! $INSTALL_BEADS && ! $INSTALL_ZSH && ! $INSTALL_GHOSTTY && ! $INSTALL_ZELLIJ && ! $INSTALL_LAZYGIT && ! $INSTALL_GH; then
+if ! $ALL && ! $INSTALL_NVIM && ! $INSTALL_PI && ! $INSTALL_COPILOT && ! $INSTALL_BEADS && ! $INSTALL_ZSH && ! $INSTALL_GHOSTTY && ! $INSTALL_ZELLIJ && ! $INSTALL_HERDR && ! $INSTALL_LAZYGIT && ! $INSTALL_GH; then
   ALL=true
 fi
 
@@ -135,6 +142,7 @@ if $ALL; then
   INSTALL_ZSH=true
   INSTALL_GHOSTTY=true
   INSTALL_ZELLIJ=true
+  INSTALL_HERDR=true
   INSTALL_LAZYGIT=true
   INSTALL_GH=true
 fi
@@ -303,6 +311,62 @@ if $INSTALL_ZELLIJ; then
     rm /tmp/zellij.tar.gz
   fi
   stow -t "$HOME" zellij
+fi
+
+# ---------------------------------------------------------------------------
+# herdr (agent-aware terminal multiplexer)
+# ---------------------------------------------------------------------------
+# herdr persists terminals AND knows which pane holds an agent and whether that
+# agent is idle/working/blocked, so several Pi sessions can run at once and you
+# can see which one needs you. Its server owns the panes, so agents survive
+# closing the window and (with the Pi integration) resume their sessions after a
+# server restart. ~/.config/herdr/ also holds runtime state (sockets,
+# session.json, logs); stow only ever adds the config.toml symlink there, so
+# never `stow --adopt` or restow after a wipe.
+if $INSTALL_HERDR; then
+  HERDR_VER="0.9.3"
+  # Release binaries ship per-arch under these exact asset names. Checksums are
+  # pinned here so a compromised download cannot run: herdr's own install.sh
+  # verifies a checksum too, but it always grabs the LATEST release, whereas
+  # everything else in this script is version-pinned for reproducibility.
+  case "$TARGET_ARCH" in
+    aarch64) HERDR_SHA="4de7aa3e25678812e92960de64f7c2aaa1bca1f0f80a3c5e559837e231e1f5c0" ;;
+    x86_64)  HERDR_SHA="18a8dc65f1c2fa485884344356dea1cfd911c6f06cf46fa78e193f4087f4dba7" ;;
+  esac
+
+  PATH="$HOME/.local/bin:$PATH"
+  INSTALLED_HERDR_VER=""
+  if command -v herdr >/dev/null 2>&1; then
+    INSTALLED_HERDR_VER=$(herdr --version 2>/dev/null | awk '{print $2}')
+  fi
+
+  if [ "$INSTALLED_HERDR_VER" != "$HERDR_VER" ]; then
+    echo "Installing herdr ${HERDR_VER}..."
+    curl -fsSL "https://github.com/herdrdev/herdr/releases/download/v${HERDR_VER}/herdr-linux-${TARGET_ARCH}" -o /tmp/herdr
+    ACTUAL_HERDR_SHA=$(sha256sum < /tmp/herdr | awk '{ print $1 }')
+    if [ "$ACTUAL_HERDR_SHA" != "$HERDR_SHA" ]; then
+      echo "✗ herdr checksum mismatch (expected ${HERDR_SHA}, got ${ACTUAL_HERDR_SHA})" >&2
+      rm -f /tmp/herdr
+      exit 1
+    fi
+    install -D -m 0755 /tmp/herdr "$HOME/.local/bin/herdr"
+    rm -f /tmp/herdr
+  else
+    echo "herdr ${HERDR_VER} already installed — skipping"
+  fi
+
+  stow -t "$HOME" herdr
+
+  # The Pi integration drops herdr-agent-state.ts into Pi's extensions dir so
+  # herdr gets authoritative idle/working/blocked state and can restore the Pi
+  # conversation after a server restart. herdr regenerates that file, so it is
+  # gitignored rather than committed.
+  if command -v pi >/dev/null 2>&1; then
+    echo "Installing herdr Pi integration..."
+    herdr integration install pi
+  else
+    echo "⚠  Skipping herdr Pi integration — pi not on PATH (run install.sh --pi first)."
+  fi
 fi
 
 # ---------------------------------------------------------------------------

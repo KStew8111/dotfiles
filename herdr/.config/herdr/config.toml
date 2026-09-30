@@ -1,0 +1,48 @@
+# Herdr configuration
+# Full annotated default: `herdr --default-config`
+# Every key:              https://herdr.dev/docs/config-reference/
+# Reload after edits:     `herdr server reload-config`
+
+# Skip first-run onboarding.
+onboarding = false
+
+[terminal]
+# New panes/tabs/workspaces inherit the directory you launched from.
+new_cwd = "follow"
+# Keep kitty graphics on (images render in panes if the outer terminal supports it).
+kitty_graphics = true
+
+[ui]
+# Click panes/tabs/borders and drag splits. Set false to stop Herdr
+# intercepting the mouse at all.
+mouse_capture = true
+
+[session]
+# After a Herdr server restart, resume supported agents (Pi, Claude, Codex...) into
+# their native conversations. Verified working for Pi: the restored pane comes back
+# on the same pi session file via `pi --session <path>`.
+resume_agents_on_restore = true
+
+[advanced]
+# ~10MB scrollback per pane (default). Raise if you want deeper history.
+scrollback_limit_bytes = 10000000
+
+[keys]
+# Prefix = Ctrl+G, matching the zellij muscle memory (in zellij, ctrl+g leaves
+# "locked" mode). Verified free: no default Herdr binding uses ctrl+g.
+prefix = "ctrl+g"
+
+# --- The following are UNSET in Herdr's defaults, so there is otherwise no ---
+# --- single keystroke to hop between agents or cycle workspaces.           ---
+
+# Cycle agents directly (prefix+a is free by default).
+previous_agent = "prefix+a"
+next_agent = "prefix+shift+a"
+
+# Cycle workspaces. Workspace sits above panes+tabs, hence the shift+horizontal.
+previous_workspace = "prefix+shift+left"
+next_workspace = "prefix+shift+right"
+
+# Indexed jumps: agent 1-9, workspace 1-9.
+focus_agent = "prefix+alt+1..9"
+switch_workspace = "prefix+shift+1..9"
