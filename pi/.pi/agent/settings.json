@@ -1,6 +1,6 @@
 {
-  "lastChangelogVersion": "0.99.1",
-  "theme": "dark",
+  "lastChangelogVersion": "0.99.2",
+  "theme": "system",
   "defaultProvider": "ollama-cloud",
   "defaultModel": "glm-5.3-flash:cloud",
   "defaultThinkingLevel": "medium",
@@ -25,5 +25,9 @@
     "github-copilot/gpt-6-astra",
     "github-copilot/claude-sonnet-5.5",
     "github-copilot/claude-opus-5.5"
-  ]
+  ],
+  "quietStartup": true,
+  "tuiMode": "fullscreen",
+  "fullscreenScrollbar": "always",
+  "fullscreenWheelScrollLines": "auto"
 }
