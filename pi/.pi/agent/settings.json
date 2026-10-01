@@ -16,7 +16,14 @@
   ],
   "enabledModels": [
     "ollama-cloud/glm-5.3:cloud",
-    "ollama-cloud/glm-5.3-flash:cloud",
-    "ollama-cloud/kimi-k2.7-code:cloud"
+    "ollama-cloud/kimi-k3:cloud",
+    "ollama-local/nemotron-3.5-lightning:latest",
+    "ollama-local/qwen3.8:27b",
+    "ollama-cloud/deepseek-v4.1-flash:cloud",
+    "github-copilot/gpt-6-sol",
+    "github-copilot/gpt-6-luna",
+    "github-copilot/gpt-6-astra",
+    "github-copilot/claude-sonnet-5.5",
+    "github-copilot/claude-opus-5.5"
   ]
 }
