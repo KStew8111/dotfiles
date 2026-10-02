@@ -77,6 +77,27 @@ return {
         shell_cmd = "(" .. up_cmd .. " && " .. exec_cmd .. ") || (ec=$?; echo 'DevcontainerConnect failed with exit code '$ec; read -rsp 'Press Enter to close...' _; exit $ec)"
       end
 
+      -- 3b. Handoff: when rig-launch-nvim started us through rig-nvim-session,
+      --     that wrapper is parked on this process and can run the command above
+      --     in this very window. Write it out and quit; the wrapper picks it up
+      --     and the container's Neovim replaces this one, no new terminal.
+      local handoff = vim.env.RIG_NVIM_HANDOFF
+      if handoff ~= nil and handoff ~= "" then
+        local file, err = io.open(handoff, "w")
+        if file == nil then
+          vim.notify("DevcontainerConnect: cannot write handoff file: " .. tostring(err), vim.log.levels.ERROR)
+          return
+        end
+        file:write(shell_cmd, "\n")
+        file:close()
+        vim.notify("DevcontainerConnect: handing this window to the container.", vim.log.levels.INFO)
+        vim.cmd("wqa")
+        -- Only reached if quitting failed (an unnamed modified buffer, say).
+        os.remove(handoff)
+        vim.notify("DevcontainerConnect: Neovim did not quit; handoff cancelled.", vim.log.levels.ERROR)
+        return
+      end
+
       local cmd = {}
       local term_name = "gnome-terminal"
 
