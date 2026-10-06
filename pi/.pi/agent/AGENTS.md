@@ -27,8 +27,9 @@ needs clarification before implementation begins.
 ## Project context files
 
 When starting work in a repository, read `AGENTS.md`/`CLAUDE.md` there as usual, and
-`CONTEXT.md` if present: it declares the project's shared domain vocabulary (glossary
-terms and ADRs). Use its terminology in conversation, naming, plans, and specs. Skills
-that consult it automatically (`tdd`, `grilling`, `grill-with-docs`, `implement`) read
-it for you; if a repo has none and its jargon needs decoding, offer to start one with
-the `domain-modeling` skill.
+`GLOSSARY.md` if present (renamed from `CONTEXT.md` in the skills v1.3 cycle; an older
+repo may still use the old name): it declares the project's shared domain vocabulary
+(glossary terms and ADRs). Use its terminology in conversation, naming, plans, and
+specs. Skills that consult it automatically (`tdd`, `grilling`, `grill-with-docs`,
+`implement`) read it for you; if a repo has none and its jargon needs decoding, offer
+to start one with the `domain-modeling` skill.
