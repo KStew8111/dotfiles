@@ -14,6 +14,7 @@ INSTALL_ZSH=false
 INSTALL_GHOSTTY=false
 INSTALL_ZELLIJ=false
 INSTALL_HERDR=false
+INSTALL_HERMES=false
 INSTALL_LAZYGIT=false
 INSTALL_GH=false
 GH_SKIP_AUTH=false
@@ -38,6 +39,8 @@ Options:
   -j, --zellij       Install zellij and stow its configuration
   -H, --herdr        Install herdr (agent-aware terminal multiplexer) and stow its
                      configuration, then install the herdr Pi integration
+  -e, --hermes       Install Hermes Agent (Nous Research) via its official installer,
+                     which publishes the ~/.local/bin/hermes launchers
   -l, --lazygit      Install lazygit
   -G, --gh           Install GitHub CLI and authenticate (login skipped when headless)
       --gh-token T   Authenticate gh with token T instead of interactive login
@@ -92,6 +95,10 @@ while [[ $# -gt 0 ]]; do
       INSTALL_HERDR=true
       shift
       ;;
+    -e|--hermes)
+      INSTALL_HERMES=true
+      shift
+      ;;
     -l|--lazygit)
       INSTALL_LAZYGIT=true
       shift
@@ -130,7 +137,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Default to --all when no component flags are provided.
-if ! $ALL && ! $INSTALL_NVIM && ! $INSTALL_PI && ! $INSTALL_COPILOT && ! $INSTALL_BEADS && ! $INSTALL_ZSH && ! $INSTALL_GHOSTTY && ! $INSTALL_ZELLIJ && ! $INSTALL_HERDR && ! $INSTALL_LAZYGIT && ! $INSTALL_GH; then
+if ! $ALL && ! $INSTALL_NVIM && ! $INSTALL_PI && ! $INSTALL_COPILOT && ! $INSTALL_BEADS && ! $INSTALL_ZSH && ! $INSTALL_GHOSTTY && ! $INSTALL_ZELLIJ && ! $INSTALL_HERDR && ! $INSTALL_HERMES && ! $INSTALL_LAZYGIT && ! $INSTALL_GH; then
   ALL=true
 fi
 
@@ -143,6 +150,7 @@ if $ALL; then
   INSTALL_GHOSTTY=true
   INSTALL_ZELLIJ=true
   INSTALL_HERDR=true
+  INSTALL_HERMES=true
   INSTALL_LAZYGIT=true
   INSTALL_GH=true
 fi
@@ -366,6 +374,36 @@ if $INSTALL_HERDR; then
     herdr integration install pi
   else
     echo "⚠  Skipping herdr Pi integration — pi not on PATH (run install.sh --pi first)."
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# Hermes Agent (Nous Research)
+# ---------------------------------------------------------------------------
+# Hermes ships its own installer: it clones into ~/.hermes/hermes-agent,
+# acquires its Python/Node runtimes, publishes the ~/.local/bin/{hermes,
+# hermes-agent,hermes-acp} launchers, and adds ~/.local/bin to the shell rc.
+# Run it non-interactively so it cannot block on the API-key setup prompts;
+# `hermes setup` finishes configuration afterwards.
+#
+# Agent only: the Desktop app is a heavy Electron build (the installer's
+# --include-desktop). rig's bin/rig-hermes-desktop starts it once it exists.
+if $INSTALL_HERMES; then
+  if [[ -x "$HOME/.local/bin/hermes" ]] || command -v hermes >/dev/null 2>&1; then
+    echo "Hermes Agent already installed — skipping (update with 'hermes update')"
+  else
+    echo "Installing Hermes Agent..."
+    # Downloaded first so a failed fetch (which would pipe an empty script into
+    # bash and look like success) is caught, and so this stays free of a
+    # mid-script `set -o pipefail`.
+    if curl -fsSL --retry 3 --retry-delay 5 \
+      https://hermes-agent.nousresearch.com/install.sh -o /tmp/hermes-install.sh \
+      && bash /tmp/hermes-install.sh --non-interactive; then
+      echo "Hermes Agent installed — run 'hermes setup' to configure it."
+    else
+      echo "⚠  Hermes Agent install failed — continuing." >&2
+    fi
+    rm -f /tmp/hermes-install.sh
   fi
 fi
 
