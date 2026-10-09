@@ -13,6 +13,7 @@
   "cmp-dap": { "branch": "master", "commit": "ea92773e84c0ad3288c3bc5e452ac91559669087" },
   "copilot.lua": { "branch": "master", "commit": "7e6723aabea044519462958ffcea68d7985c5ed0" },
   "devcontainer-cli.nvim": { "branch": "main", "commit": "00b08c1dd2b272b5b56b265de148c38d12ea0597" },
+  "diffview.nvim": { "branch": "main", "commit": "4516612fe98ff56ae0415a259ff6361a89419b0a" },
   "friendly-snippets": { "branch": "main", "commit": "6cd7280adead7f586db6fccbd15d2cac7e2188b9" },
   "gitsigns.nvim": { "branch": "main", "commit": "7010000889bfb6c26065e0b0f7f1e6aa9163edd9" },
   "guess-indent.nvim": { "branch": "main", "commit": "84a4987ff36798c2fc1169cbaff67960aed9776f" },
