@@ -134,6 +134,11 @@ fi
 
 export PATH="$HOME/.npm-global/bin:$PATH"
 
+# ~/.local/bin: per-user tool installs — herdr, uv, aws, and the Hermes Agent
+# launchers. The `case` guard keeps a re-sourced rc from stacking duplicates,
+# and this is the form Hermes' installer looks for, so it won't append its own.
+case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$PATH" ;; esac
+
 # ROS 2 autocomplete
 if command -v register-python-argcomplete &>/dev/null; then
     eval "$(register-python-argcomplete ros2)"
