@@ -27,7 +27,9 @@ return {
         "cpptools",
 
         -- install any other package
-        "tree-sitter-cli",
+        -- NOTE: tree-sitter-cli is intentionally not installed via Mason: its
+        -- prebuilt arm64 binary hard-requires glibc 2.39 and fails on Ubuntu
+        -- 22.04. The dotfiles installer builds a compatible CLI with cargo.
         "cpplint",
       },
     },

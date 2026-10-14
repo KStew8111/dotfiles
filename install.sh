@@ -220,6 +220,40 @@ install_neovim() {
   rm -f /tmp/nvim.tar.gz
 }
 
+# nvim-treesitter (main branch) builds parsers with the `tree-sitter` CLI.
+# Mason ships a prebuilt CLI whose arm64 build hard-requires glibc 2.39, so it
+# fails to load on Ubuntu 22.04 (glibc 2.35). Build the CLI from source with
+# cargo instead, linking it against the host glibc; rig installs Rust and
+# ~/.cargo/bin is on the session PATH.
+TREE_SITTER_CLI_VER="0.27.1"
+
+ensure_tree_sitter_cli() {
+  # Non-interactive shells don't source ~/.cargo/env, so cargo wouldn't be found.
+  if [ -f "$HOME/.cargo/env" ]; then
+    . "$HOME/.cargo/env"
+  fi
+
+  # A previous run (or a compatible distro build) already provides a CLI.
+  if command -v tree-sitter >/dev/null 2>&1 && tree-sitter --version >/dev/null 2>&1; then
+    echo "tree-sitter CLI already available ($(tree-sitter --version | head -n1))"
+    return
+  fi
+
+  # Drop Mason's prebuilt CLI if it is present but unusable, so it can't shadow
+  # the compatible one built below.
+  rm -f "$HOME/.local/share/nvim/mason/bin/tree-sitter"
+  rm -rf "$HOME/.local/share/nvim/mason/packages/tree-sitter-cli"
+
+  if ! command -v cargo >/dev/null 2>&1; then
+    echo "⚠  cargo not found — cannot build tree-sitter CLI; nvim-treesitter parser installs will fail." >&2
+    return
+  fi
+
+  echo "Building tree-sitter CLI ${TREE_SITTER_CLI_VER} with cargo (may take a few minutes)..."
+  cargo install tree-sitter-cli --version "$TREE_SITTER_CLI_VER" --locked \
+    || echo "⚠  Failed to build tree-sitter CLI — nvim-treesitter parser installs may fail." >&2
+}
+
 # ---------------------------------------------------------------------------
 # Neovim / AstroNvim
 # ---------------------------------------------------------------------------
@@ -243,6 +277,9 @@ if $INSTALL_NVIM; then
 
   # Stow the shared AstroNvim v6 configuration on every supported system.
   stow -t "$HOME" nvim
+
+  # Provide a glibc-compatible tree-sitter CLI for nvim-treesitter.
+  ensure_tree_sitter_cli
 fi
 
 # ---------------------------------------------------------------------------
