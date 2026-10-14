@@ -169,25 +169,12 @@ case "$ARCH" in
 esac
 
 # ---------------------------------------------------------------------------
-# Detect Ubuntu major version (falls back to 0 on non-Ubuntu systems)
+# Neovim version
 # ---------------------------------------------------------------------------
-UBUNTU_VER=0
-if [ -f /etc/os-release ]; then
-  . /etc/os-release
-  if [ "$ID" = "ubuntu" ]; then
-    UBUNTU_VER=$(echo "$VERSION_ID" | cut -d. -f1)
-  fi
-fi
-
-# Ubuntu 22 and older → AstroNvim v5 + Neovim 0.10.4
-# Ubuntu 24 and newer → AstroNvim v6 + Neovim 0.12.4
-if [ "$UBUNTU_VER" -le 22 ] && [ "$UBUNTU_VER" -gt 0 ]; then
-  NVIM_VER="0.10.4"
-  echo "Detected Ubuntu $UBUNTU_VER — using AstroNvim v5 (nvim-legacy)"
-else
-  NVIM_VER="0.12.4"
-  echo "Detected Ubuntu $UBUNTU_VER (or non-Ubuntu) — using AstroNvim v6 (nvim)"
-fi
+# Neovim 0.12.5's supported Linux builds require glibc 2.34, which Ubuntu
+# 22.04+ (glibc 2.35) ships on both x86_64 and arm64. Install that one version
+# from the main repo and stow the single AstroNvim v6 config everywhere.
+NVIM_VER="0.12.5"
 
 # Map architecture to Neovim release tarball naming
 case "$TARGET_ARCH" in
@@ -249,12 +236,13 @@ if $INSTALL_NVIM; then
     fi
   fi
 
-  # Stow the matching AstroNvim configuration
-  if [ "$UBUNTU_VER" -le 22 ] && [ "$UBUNTU_VER" -gt 0 ]; then
-    stow -t "$HOME" nvim-legacy
-  else
-    stow -t "$HOME" nvim
-  fi
+  # Migrate from the old per-release split: a previous install on older Ubuntu
+  # may have stowed the AstroNvim v5 config, so drop those symlinks first or
+  # stow will refuse the conflicting paths.
+  stow -D -t "$HOME" nvim-legacy 2>/dev/null || true
+
+  # Stow the shared AstroNvim v6 configuration on every supported system.
+  stow -t "$HOME" nvim
 fi
 
 # ---------------------------------------------------------------------------
