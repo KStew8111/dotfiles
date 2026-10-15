@@ -185,15 +185,69 @@ esac
 # ---------------------------------------------------------------------------
 # npm helper
 # ---------------------------------------------------------------------------
+# pi (and the other npm-based CLIs below) need a modern Node. Ubuntu 26.04
+# ships Node 22, but Ubuntu 22.04 (e.g. NVIDIA Jetson Orin L4T) still ships
+# Node 12, which cannot run pi >= 1.2 (needs >= 22.19.0: its CLI imports
+# enableCompileCache from node:module). When the system Node is missing or too
+# old, install a known-good one from the official nodejs.org tarball — the same
+# release-tarball approach used for nvim, gh, lazygit and zellij — rather than
+# the distro package, which on those releases is far too old.
+NODE_VER="22.23.3"
+NODE_MIN_MAJOR=22
+NODE_MIN_MINOR=19
+
+case "$TARGET_ARCH" in
+  aarch64) NODE_ARCH="arm64" ;;
+  x86_64)  NODE_ARCH="x64" ;;
+esac
+
+# True when the Node on PATH is at least $NODE_MIN_MAJOR.$NODE_MIN_MINOR.
+node_is_current() {
+  command -v node >/dev/null 2>&1 || return 1
+
+  local v major minor
+  v=$(node --version 2>/dev/null) || return 1
+  v=${v#v}
+  major=${v%%.*}
+  minor=${v#*.}
+  minor=${minor%%.*}
+  [[ $major =~ ^[0-9]+$ && $minor =~ ^[0-9]+$ ]] || return 1
+  (( major > NODE_MIN_MAJOR || (major == NODE_MIN_MAJOR && minor >= NODE_MIN_MINOR) ))
+}
+
+install_node() {
+  echo "Installing Node.js ${NODE_VER}..."
+
+  local tarball="node-v${NODE_VER}-linux-${NODE_ARCH}"
+  curl -fsSL --retry 3 --retry-delay 5 --connect-timeout 15 --max-time 300 \
+    "https://nodejs.org/dist/v${NODE_VER}/${tarball}.tar.xz" -o /tmp/node.tar.xz
+  sudo mkdir -p /opt
+  sudo rm -rf "/opt/${tarball}" "/opt/node-${NODE_VER}"
+  sudo tar -xJf /tmp/node.tar.xz -C /opt
+  sudo mv "/opt/${tarball}" "/opt/node-${NODE_VER}"
+  # Symlink into /usr/local/bin so node/npm/npx win over any distro binaries
+  # (e.g. Ubuntu 22.04's Node 12 from apt) that may still be on PATH.
+  sudo ln -sfn "/opt/node-${NODE_VER}/bin/node" /usr/local/bin/node
+  sudo ln -sfn "/opt/node-${NODE_VER}/bin/npm" /usr/local/bin/npm
+  sudo ln -sfn "/opt/node-${NODE_VER}/bin/npx" /usr/local/bin/npx
+  rm -f /tmp/node.tar.xz
+}
+
 ensure_npm() {
-  # Install nodejs + npm if not already available.
-  if ! command -v npm >/dev/null 2>&1; then
-    echo "Installing nodejs and npm..."
-    sudo apt-get update && sudo apt-get install -y nodejs npm
+  # Make a modern node + npm available, installing one if the system's is
+  # missing or too old.
+  if ! node_is_current; then
+    install_node
   fi
 
+  # Prefer the Node we may have just installed under /usr/local/bin.
+  case ":$PATH:" in
+    *:/usr/local/bin:*) ;;
+    *) PATH="/usr/local/bin:$PATH"; export PATH ;;
+  esac
+
   if ! command -v npm >/dev/null 2>&1; then
-    echo "⚠  npm still not found after install attempt — skipping npm-based tools."
+    echo "⚠  npm not found after Node install attempt — skipping npm-based tools."
     return 1
   fi
 }
