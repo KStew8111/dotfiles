@@ -8,14 +8,19 @@ return {
     config = function()
       local nightfox = require "nightfox"
 
-      -- rig-theme-apply writes the active palette here so `rig-theme-apply
-      -- <theme>` reaches Neovim as well. Without the file (a fresh checkout
-      -- before install) keep AstroNvim's default theme.
-      local theme_file = vim.fn.expand "~/.local/state/rig/theme/nvim.lua"
-      local theme
-      if vim.fn.filereadable(theme_file) == 1 then
-        local ok, parsed = pcall(dofile, theme_file)
-        if ok and type(parsed) == "table" and type(parsed.palette) == "table" then theme = parsed end
+      -- Prefer the palette rig-theme-apply wrote for the active theme. Fall
+      -- back to the committed snapshot so Neovim is still themed where the
+      -- host state dir is absent (devcontainers, CI, dotfiles-only installs).
+      local function read_palette(path)
+        if vim.fn.filereadable(path) == 0 then return nil end
+        local ok, parsed = pcall(dofile, path)
+        if ok and type(parsed) == "table" and type(parsed.palette) == "table" then return parsed end
+      end
+
+      local theme = read_palette(vim.fn.expand "~/.local/state/rig/theme/nvim.lua")
+      if not theme then
+        local ok, bundled = pcall(require, "rig_theme_default")
+        if ok and type(bundled) == "table" and type(bundled.palette) == "table" then theme = bundled end
       end
 
       nightfox.setup {

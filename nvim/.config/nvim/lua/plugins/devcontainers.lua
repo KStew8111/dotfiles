@@ -37,7 +37,35 @@ return {
 
       -- 2. Build the exec command (primary path: just connect to a running container).
       local nvim_binary = opts.nvim_binary or "nvim"
-      local exec_cmd = devcontainer_bin .. " exec --workspace-folder '" .. workspace .. "' " .. nvim_binary
+
+      -- The container installs dotfiles only, so it has Neovim's committed
+      -- fallback palette but not the host's active rig theme. Push the live
+      -- palette into the container before starting the editor so the theme
+      -- matches the host; without host state it just uses the fallback.
+      local function host_palette_b64()
+        local path = vim.fn.expand "~/.local/state/rig/theme/nvim.lua"
+        if vim.fn.filereadable(path) == 0 then return nil end
+        local encoded = vim.fn.system { "base64", "-w0", path }
+        if vim.v.shell_error ~= 0 then return nil end
+        encoded = vim.trim(encoded)
+        return encoded ~= "" and encoded or nil
+      end
+
+      local payload = host_palette_b64()
+      local exec_cmd
+      if payload then
+        local remote = "mkdir -p ~/.local/state/rig/theme && printf %s "
+          .. vim.fn.shellescape(payload)
+          .. " | base64 -d > ~/.local/state/rig/theme/nvim.lua && exec "
+          .. nvim_binary
+        exec_cmd = devcontainer_bin
+          .. " exec --workspace-folder '"
+          .. workspace
+          .. "' bash -c "
+          .. vim.fn.shellescape(remote)
+      else
+        exec_cmd = devcontainer_bin .. " exec --workspace-folder '" .. workspace .. "' " .. nvim_binary
+      end
 
       -- 3. Check whether a devcontainer is already running for this workspace.
       --    The devcontainer CLI labels containers with the path to their
