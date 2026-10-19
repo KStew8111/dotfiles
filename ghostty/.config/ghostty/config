@@ -45,7 +45,7 @@ selection-background = 333333
 selection-foreground = bebebe
 
 # --- Style ---
-background-opacity = 0.95
+background-opacity = 0.8
 background-blur-radius = 20
 
 # --- Shell ---
